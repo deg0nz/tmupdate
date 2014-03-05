@@ -1,0 +1,153 @@
+#!/bin/bash
+#####################################################################
+## Bashscript um automatisch neue Dateien vom ftp-Telematikserver 
+## der TH-Wildau (Aufgaben & Scripte) zu holen.
+##
+## Das Script ist auf OSX geschrieben, auf Linux und BSD sollte es aber
+## auch funktionieren.
+##
+## Das Script erzeugt folgende Ordnerstruktur (sofern noch nicht vorhanden):
+## /PATH/TO/HOMEDIR/SEMESTER/FACH1
+##					.../FACH2
+##					.../FACHXY/...
+##
+## In anderen Semestern müssen dann ggf. die Dozenten, Ordner uns Arrays angepasst werden
+##						
+## !!WICHTIG!!
+## Zur Authentifizierung auf dem Server ist es notwendig, dass SSH
+## keys für Client und Server erzeugt und übertragen wurden.
+## Anleitung hier:
+## http://serverfault.com/questions/241588/how-to-automate-ssh-login-with-password
+##
+##	Copyright 2013 (GPL) by Benjamin Gericke
+##	Twitter: @deg0nz
+##	ADN: @deg0nz
+##
+## version 0.8b // Configurable first version Wintersemester2013/14
+#####################################################################
+
+
+#####################################################################
+# Nachfolgend ggf. Änderungen vornehmen
+#####################################################################
+
+# Username eingeben
+USER='tmstudent'
+
+# Studiengang
+STUDIENGANG='T13'
+
+# Welches Semester? (= Ordner für Semester - !!Keine Slashes!!)
+SEMESTER='Wintersemester 13_14'
+
+# Hier den absoluten lokalen Pfad zu den Telematik-Dateien eintragen
+# z.B.: /Users/[UserName]/Documents/Telematik
+LOCALPATH='/Users/deg0nz/Telematik/'
+
+
+# Deine Dozenten auf dem Telematikserver mit
+# folgender Semantik eintragen (=Ordnernamen auf Server)
+# (Reihenfolge muss mit den Ordnern in LOCALs identisch sein.)
+
+#0
+IKO='Wilkes'
+#1
+PSE='Mohnke'
+#2
+TI='Mohnke'
+#3
+PUEM='Richartz'
+#4
+PUEM_LABOR='Hoppe'
+#5
+MATHE='Weissbach'
+#6
+KPR='Bialas'
+
+
+# Ordnernamen für Fächer lokal (Reihenfolge muss identisch mit Dozenten sein!!)
+
+#0
+IKO_LOCAL='Internetkommunikation'
+#1
+PSE1_LOCAL='Programmierung und Software Engineering 1'
+#2
+TI_LOCAL='Technische Informatik'
+#3
+PUEM_LOCAL='Physik der Übertragungsmedien'
+#4
+PUEM_LABOR_LOCAL='Physik der Übertragungsmedien Labor'
+#5
+MATHE_LOCAL='Mathematik I'
+#6
+KPR_LOCAL='Präsentations- und Kommunikationstraining'
+
+
+#
+# Create array for local Folders 
+#
+LOCALDIRS[0]=$IKO_LOCAL
+LOCALDIRS[1]=$PSE1_LOCAL
+LOCALDIRS[2]=$TI_LOCAL
+LOCALDIRS[3]=$PUEM_LOCAL
+LOCALDIRS[4]=$PUEM_LABOR_LOCAL
+LOCALDIRS[5]=$MATHE_LOCAL
+LOCALDIRS[6]=$KPR_LOCAL
+
+#
+# Create array for remote folders
+#
+# following line is deprecated
+# REMOTEDIRS=( 'Wilkes' 'Mohnke' 'Richartz' 'Hoppe' 'Weissbach' 'Bialas' )
+#
+REMOTEDIRS[0]=$IKO/$STUDIENGANG/IKO
+REMOTEDIRS[1]=$PSE/$STUDIENGANG/PSE1
+REMOTEDIRS[2]=$TI/$STUDIENGANG/TI
+REMOTEDIRS[3]=$PUEM/$STUDIENGANG/PUeM
+REMOTEDIRS[4]=$PUEM_LABOR/$STUDIENGANG/PUeM
+#Freizeichen für Mathe umgehen:
+MAEINS='MA\ I'
+REMOTEDIRS[5]=$MATHE/$STUDIENGANG/$MAEINS
+REMOTEDIRS[6]=$KPR/$STUDIENGANG
+
+
+#####################################################################
+# Do not change anything beneath this line! (Unless you know what you are doing ;)
+#####################################################################
+
+# Adresse zum Server - Das muss normalerweise nicht verändert werden
+HOST='www.tm.th-wildau.de'
+
+# Pfad auf Server zu den Aufgaben und Scripten
+REMOTEPATH='/home/tms1/post/Aufgabe'
+
+
+# thetime
+NOW=$(date +"%B-%d-%Y %T")
+# echo begin sync
+echo "********************************"
+echo "The time is now $NOW"
+echo "Starting sync..."
+echo "********************************"
+
+
+# for-loop to check all items in remote-folder-Arrays and local-folder-Arrays and
+# execute rsync for each folder
+for (( i=0; i < ${#REMOTEDIRS[@]}; i++ ))
+do
+	echo "--------------------------------------------------------------------------------"
+	echo "Syncing from remote folder ${REMOTEDIRS[$i]} to local folder ${LOCALDIRS[$i]}.."
+	echo "--------------------------------------------------------------------------------"
+	echo "New Files:"
+	
+	rsync -ave ssh $USER@$HOST:$REMOTEPATH/"${REMOTEDIRS[$i]}"/ $LOCALPATH/"$SEMESTER"/"${LOCALDIRS[$i]}" -h --human-readable
+	
+done
+
+#echo end sync
+echo "********************************"
+echo "Sync finished! Bye."
+echo "********************************"
+
+
+exit 0
