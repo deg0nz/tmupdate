@@ -72,7 +72,7 @@ Als letztes muss das Script noch ausführbar gemacht werden:
 **Wenn es ausführbar ist, kannst du das Script nach /usr/local/bin kopieren um den Befehl direkt ins Terminal eingeben zu können.**
  
 ###Installation:
-	git clone git@bitbucket.org:deg0nz/tmUpdate   
+	git clone https://github.com/deg0nz/tmupdate.git   
 
 Anleitung mit code ist hier: [tmUpdate auf Kayuk.de](http://kayuk.de/blog/2014/01/script-zum-abgleich-lokaler-daten-mit-telematikserver-der-th-wildau/)
 
