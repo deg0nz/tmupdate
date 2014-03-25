@@ -232,7 +232,7 @@ else
 	while [[ "$SMBFSOUTPUT" != "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe on ${MOUNTPATH} (smbfs, nodev, nosuid, mounted by ${USER})" ]]; do
 
 		SMBFSOUTPUT=`mount -t smbfs -v "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe" $MOUNTPATH`
-;
+		
 	done
 
 fi
