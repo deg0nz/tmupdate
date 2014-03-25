@@ -1,153 +1,284 @@
 #!/bin/bash
 #####################################################################
-## Bashscript um automatisch neue Dateien vom ftp-Telematikserver 
+## Bashscript um automatisch neue Dateien vom Telematikserver 
 ## der TH-Wildau (Aufgaben & Scripte) zu holen.
 ##
-## Das Script ist auf OSX geschrieben, auf Linux und BSD sollte es aber
-## auch funktionieren.
+## Das Script ist auf OSX geschrieben, die Funktionalität auf Linux und BSD 
+## muss noch gestestet werden, ich habe mich aber bemüht, 
+## Funktionalität auf Linux zu gewährleisten.
 ##
 ## Das Script erzeugt folgende Ordnerstruktur (sofern noch nicht vorhanden):
 ## /PATH/TO/HOMEDIR/SEMESTER/FACH1
 ##					.../FACH2
 ##					.../FACHXY/...
 ##
-## In anderen Semestern müssen dann ggf. die Dozenten, Ordner uns Arrays angepasst werden
-##						
-## !!WICHTIG!!
-## Zur Authentifizierung auf dem Server ist es notwendig, dass SSH
-## keys für Client und Server erzeugt und übertragen wurden.
-## Anleitung hier:
-## http://serverfault.com/questions/241588/how-to-automate-ssh-login-with-password
+## In anderen Semestern müssen dann ggf. die Dozenten, Ordner und Arrays angepasst werden
+## 	
+##  	
 ##
-##	Copyright 2013 (GPL) by Benjamin Gericke
+##	
+##	Copyright 2013-2014 (GPL) by Benjamin Gericke
 ##	Twitter: @deg0nz
 ##	ADN: @deg0nz
+##  GitHub: https://github.com/deg0nz
 ##
-## version 0.8b // Configurable first version Wintersemester2013/14
+## version 0.8.1b // Configurable second version, Stand: Sommersemester 14 
 #####################################################################
 
 
+## 2 DO :
+## -Moodle Handle für AUD... (idee: via wget & cookie-catching)
+##
+
+
 #####################################################################
-# Nachfolgend ggf. Änderungen vornehmen
+##																	#
+## 			Nachfolgend ggf. Änderungen vornehmen					#
+##																	#
 #####################################################################
 
-# Username eingeben
-USER='tmstudent'
+#
+# Username eingeben (Der Selbe, den man zur Anmeldung im Hochschulnetz benötigt)
+#
+TMUSER='bgericke'
 
+#
 # Studiengang
+#
 STUDIENGANG='T13'
 
-# Welches Semester? (= Ordner für Semester - !!Keine Slashes!!)
-SEMESTER='Wintersemester 13_14'
+#
+# Welches Semester? (= Ordner für Semester (!!Keine Slashes!!))
+#
+SEMESTER='Sommersemester 14'
 
+#
 # Hier den absoluten lokalen Pfad zu den Telematik-Dateien eintragen
 # z.B.: /Users/[UserName]/Documents/Telematik
+#
 LOCALPATH='/Users/deg0nz/Telematik/'
 
+#
+# Lokaler Ordner zum Mounten des Samba-Shares
+#
+MOUNTPATH='/Volumes/Aufgabe'
 
+#
+# Pfad zum Cisco-AnyConnect CLI (für Kommandozeilen-Login ins Hochschulnetz)
+# OSX: /opt/cisco/anyconnect/bin/vpn
+# Linux: 
+#
+ANYCONNECT_LOCAL='/opt/cisco/anyconnect/bin/vpn'
+
+#
 # Deine Dozenten auf dem Telematikserver mit
 # folgender Semantik eintragen (=Ordnernamen auf Server)
 # (Reihenfolge muss mit den Ordnern in LOCALs identisch sein.)
+#
 
-#0
-IKO='Wilkes'
-#1
-PSE='Mohnke'
-#2
-TI='Mohnke'
-#3
-PUEM='Richartz'
-#4
-PUEM_LABOR='Hoppe'
-#5
+#0 Eletrotechnik für Telematiker
+ET_TM='Fabig'
+#1 BWL
+BWL='Laschke'
+#2 Betriebssysteme
+BETRIEBSSYTEME='Richartz'
+#3 Algorithmen und Datenstrukturen
+AUD='Mohnke'
+#4 Mathematik
 MATHE='Weissbach'
-#6
-KPR='Bialas'
+#5 ETfT Laborübungen
+ET_TM_LABOR='Hoppe'
+#6 Kommunikationstechnik
+KOMMTECH='Richartz'
+#7 PSA - Praktikum
+PRAKTIKUM='Weissbach'
 
-
+#
 # Ordnernamen für Fächer lokal (Reihenfolge muss identisch mit Dozenten sein!!)
-
-#0
-IKO_LOCAL='Internetkommunikation'
-#1
-PSE1_LOCAL='Programmierung und Software Engineering 1'
-#2
-TI_LOCAL='Technische Informatik'
-#3
-PUEM_LOCAL='Physik der Übertragungsmedien'
-#4
-PUEM_LABOR_LOCAL='Physik der Übertragungsmedien Labor'
-#5
-MATHE_LOCAL='Mathematik I'
-#6
-KPR_LOCAL='Präsentations- und Kommunikationstraining'
-
-
 #
-# Create array for local Folders 
-#
-LOCALDIRS[0]=$IKO_LOCAL
-LOCALDIRS[1]=$PSE1_LOCAL
-LOCALDIRS[2]=$TI_LOCAL
-LOCALDIRS[3]=$PUEM_LOCAL
-LOCALDIRS[4]=$PUEM_LABOR_LOCAL
-LOCALDIRS[5]=$MATHE_LOCAL
-LOCALDIRS[6]=$KPR_LOCAL
+
+#0 Eletrotechnik für Telematiker
+ET_TM_LOCAL='Elektrotechnik für Telematiker'
+#1 BWL
+BWL_LOCAL='Betriebswirtschaftslehre'
+#2 Betriebssysteme
+BETRIEBSSYTEME_LOCAL='Betriebssysteme'
+#3 Algorithmen und Datenstrukturen
+AUD_LOCAL='Algorithmen und Datenstrukturen'
+#4 Mathematik
+MATHE_LOCAL='Mathematik II'
+#5 ET Laborübungen
+ET_TM_LABOR_LOCAL='Eletrotechnik für Telematiker Laborübungen'
+#6 
+KOMMTECH_LOCAL='Kommunikationstechnik'
+#7
+PRAKTIKUM_LOCAL='PSA - Praktikum'
 
 #
-# Create array for remote folders
+# Create array for local Folders  (Muss nur für neues Semester verändert werden)
 #
-# following line is deprecated
-# REMOTEDIRS=( 'Wilkes' 'Mohnke' 'Richartz' 'Hoppe' 'Weissbach' 'Bialas' )
+
+LOCALDIRS[0]=$ET_TM_LOCAL
+LOCALDIRS[1]=$BWL_LOCAL
+LOCALDIRS[2]=$BETRIEBSSYTEME_LOCAL
+LOCALDIRS[3]=$AUD_LOCAL
+LOCALDIRS[4]=$MATHE_LOCAL
+LOCALDIRS[5]=$ET_TM_LABOR_LOCAL
+LOCALDIRS[6]=$KOMMTECH_LOCAL
+LOCALDIRS[7]=$PRAKTIKUM_LOCAL
+
 #
-REMOTEDIRS[0]=$IKO/$STUDIENGANG/IKO
-REMOTEDIRS[1]=$PSE/$STUDIENGANG/PSE1
-REMOTEDIRS[2]=$TI/$STUDIENGANG/TI
-REMOTEDIRS[3]=$PUEM/$STUDIENGANG/PUeM
-REMOTEDIRS[4]=$PUEM_LABOR/$STUDIENGANG/PUeM
+# Create array for remote folders (Muss nur für neues Semester verändert werden)
+#
+
+REMOTEDIRS[0]=$ET_TM/$STUDIENGANG/ELT/
+REMOTEDIRS[1]=$BWL/$STUDIENGANG/
+REMOTEDIRS[2]=$BETRIEBSSYTEME/$STUDIENGANG/Betriebssysteme/
+REMOTEDIRS[3]=$AUD/$STUDIENGANG/
 #Freizeichen für Mathe umgehen:
-MAEINS='MA\ I'
-REMOTEDIRS[5]=$MATHE/$STUDIENGANG/$MAEINS
-REMOTEDIRS[6]=$KPR/$STUDIENGANG
+MAZWEI='Ma II'
+REMOTEDIRS[4]=$MATHE/$STUDIENGANG/$MAZWEI/
+REMOTEDIRS[5]=$ET_TM_LABOR/$STUDIENGANG/
+REMOTEDIRS[6]=$KOMMTECH/$STUDIENGANG/Kommunikationstechnik/
+REMOTEDIRS[7]=$PRAKTIKUM/$STUDIENGANG/PSA/
 
 
-#####################################################################
-# Do not change anything beneath this line! (Unless you know what you are doing ;)
-#####################################################################
+######################################################################################
+##																				     #
+##  Do not change anything beneath this line! (Unless you know what you are doing ;) #
+##																					 #
+######################################################################################
 
 # Adresse zum Server - Das muss normalerweise nicht verändert werden
-HOST='www.tm.th-wildau.de'
+HOST='tmserv2.inw.ad.th-wildau.de'
 
-# Pfad auf Server zu den Aufgaben und Scripten
-REMOTEPATH='/home/tms1/post/Aufgabe'
+# Check and save OS in variable
+UNAMESTR=`uname`
 
+## Pfad auf Server zu den Aufgaben und Scripten
+## REMOTE PATH is deprecated due to mounting an SMB-share -> local mount MOUNTPATH is used instead
+##
 
-# thetime
-NOW=$(date +"%B-%d-%Y %T")
+# REMOTEPATH='../post/aufgabe'
+
+## Farbspezifikationen für die Übersicht der Outputs
+lred='\e[1;31m'	# light red 
+lgreen='\e[1;32m' # light green
+lblue='\e[1;34m' # light blue
+lpurple='\e[1;35m' # light purple
+nc='\e[0m' # No Color
+
+## Als erstes Check, ob wir mit dem Uninetz verbunden sind.
+## Pinge $HOST - falls nicht erreichbar, rufe AnyConnect auf.
+
+echo " "
+echo " "
+echo "Check, ob du mit dem Hochschulnetz verbunden bist..."
+
+## Pinging HOST
+ping -c1 -W3 $HOST > /dev/null 2>&1
+	if [[ $? -eq 0 ]] ; then
+
+		printf "${lgreen}Verbunden.${nc} \n \n"
+
+	else
+		
+		printf "${lred}Nicht verbunden.${nc} \n"
+		echo "Möchtest du nach dem Sync wieder disconnecten?"
+	
+		select yn in "Ja" "Nein"; do
+    		case $yn in
+        		Ja ) DISCONNECT='1'; break;;
+        		Nein ) DISCONNECT='0'; break;;
+				* ) echo "Bitte 1 oder 2 eingeben!";
+    		esac
+		done
+
+		printf "\n \n${lpurple}Rufe CiscoAnyConnect auf.${nc} \n"
+
+		$ANYCONNECT_LOCAL connect vpn.th-wildau.de
+
+		printf "${lgreen}Verbunden.${nc} \n \n \n"
+	fi
+
+## Check if Samba Share is already mounted by checking if a folder in MOUNTPATH exists.
+
+if [[ -d "$MOUNTPATH" ]]; then
+
+	WASMOUNTEDBEFORE=true
+	printf "\n${lpurple}Samba-share ist schon verbunden. ${nc} \n \n" 
+
+else
+
+	# will wait for 2 seconds
+	printf "Warte"
+		for (( i=1; i <= 5; i++ ))
+		do
+			sleep 0.2
+			printf "."
+		done
+
+	printf "\n\n${lpurple}Mounte Samba-share...${nc} \n \n" 
+
+## Mounting Samba share
+	WASMOUNTEDBEFORE=false
+	mkdir $MOUNTPATH
+
+## Due to Problems with wrong login-data later in the script, we repeat to mount until login is successful
+## Therefore we catch the output of the mount-command
+
+	SMBFSOUTPUT=''
+	while [[ "$SMBFSOUTPUT" != "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe on ${MOUNTPATH} (smbfs, nodev, nosuid, mounted by ${USER})" ]]; do
+
+		SMBFSOUTPUT=`mount -t smbfs -v "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe" $MOUNTPATH`
+
+	done
+
+fi
+
 # echo begin sync
-echo "********************************"
-echo "The time is now $NOW"
-echo "Starting sync..."
-echo "********************************"
+printf "${lblue}********************************  Starte sync...  ********************************${nc} \n"
 
 
 # for-loop to check all items in remote-folder-Arrays and local-folder-Arrays and
 # execute rsync for each folder
 for (( i=0; i < ${#REMOTEDIRS[@]}; i++ ))
 do
-	echo "--------------------------------------------------------------------------------"
-	echo "Syncing from remote folder ${REMOTEDIRS[$i]} to local folder ${LOCALDIRS[$i]}.."
-	echo "--------------------------------------------------------------------------------"
+	echo "--------------------------------------------------------------------------------------------------------------------"
+	printf "  ${lblue}Syncing from remote folder ${lgreen}${REMOTEDIRS[$i]}${nc} ${lblue}to local folder${nc} ${lgreen}${LOCALDIRS[$i]}${nc} ${nc} \n"
+	echo "--------------------------------------------------------------------------------------------------------------------"
 	echo "New Files:"
 	
-	rsync -ave ssh $USER@$HOST:$REMOTEPATH/"${REMOTEDIRS[$i]}"/ $LOCALPATH/"$SEMESTER"/"${LOCALDIRS[$i]}" -h --human-readable
+	rsync -av $MOUNTPATH/"${REMOTEDIRS[$i]}" $LOCALPATH/"$SEMESTER"/"${LOCALDIRS[$i]}" -h --human-readable
 	
 done
 
-#echo end sync
-echo "********************************"
-echo "Sync finished! Bye."
-echo "********************************"
+#echo end of sync
+printf "\n${lblue}********************************  Sync beendet. ******************************** ${nc} \n"
 
+
+ 
+if [[ "$DISCONNECT" = 1 ]] ; then
+
+	echo " "
+	printf "${lpurple}Hänge SMB-share aus und beende VPN-Verbindung.${nc} \n"
+
+# Check, wich System we are running to call proper umount command via uname
+
+	if [[ "$UNAMESTR" = 'Darwin' ]]; then
+
+		diskutil umount force $MOUNTPATH
+
+	elif [[ "$UNAMESTR" == 'Linux' ]]; then
+
+		umount force $MOUNTPATH
+
+	fi
+	
+	echo " "
+
+	$ANYCONNECT_LOCAL disconnect > /dev/null 2>&1
+	printf "${lred}Verbindung zum VPN beendet.${nc} \n"
+fi
 
 exit 0
