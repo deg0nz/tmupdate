@@ -1,6 +1,12 @@
 
 
 # tmUpdate
+
+# THIS README IS DEPRECATED! I'LL CHANGE IT AS SOON AS POSSIBLE!
+## Please Visit http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/ for up-to-date information!!
+
+
+<del>
 ### Script zum Abgleich lokaler Daten mit Telematikserver der TH Wildau
 
 
@@ -76,7 +82,7 @@ Als letztes muss das Script noch ausführbar gemacht werden:
 
 Anleitung mit code ist hier: [tmUpdate auf Kayuk.de](http://kayuk.de/blog/2014/01/script-zum-abgleich-lokaler-daten-mit-telematikserver-der-th-wildau/)
 
-
+</del>
 ## License
 
 (The MIT License)
