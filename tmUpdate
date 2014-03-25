@@ -56,19 +56,12 @@ SEMESTER='Sommersemester 14'
 # Hier den absoluten lokalen Pfad zu den Telematik-Dateien eintragen
 # z.B.: /Users/[UserName]/Documents/Telematik
 #
-LOCALPATH='/PFAD/ZU/DEINEM/TELEMATIKORDNER'
+LOCALPATH='/Users/DEINUSER/Telematik'
 
 #
-# Lokaler Ordner zum Mounten des Samba-Shares
+# Lokaler Ordner zum Mounten des Samba-Shares (Du solltest Schreibrechte in dem Ordner haben!)
 #
 MOUNTPATH='/Volumes/Aufgabe'
-
-#
-# Pfad zum Cisco-AnyConnect CLI (für Kommandozeilen-Login ins Hochschulnetz)
-# OSX: /opt/cisco/anyconnect/bin/vpn
-# Linux: 
-#
-ANYCONNECT_LOCAL='/opt/cisco/anyconnect/bin/vpn'
 
 #
 # Deine Dozenten auf dem Telematikserver mit
@@ -155,6 +148,15 @@ HOST='tmserv2.inw.ad.th-wildau.de'
 # Check and save OS in variable
 UNAMESTR=`uname`
 
+#
+# Pfad zum Cisco-AnyConnect CLI (für Kommandozeilen-Login ins Hochschulnetz)
+# Meist ist das der selbe Pfad auf Linux und OSX
+#
+# OSX: /opt/cisco/anyconnect/bin/vpn
+# Linux (Mint): /opt/cisco/anyconnect/bin/vpn
+#
+ANYCONNECT_LOCAL='/opt/cisco/anyconnect/bin/vpn'
+
 ## Pfad auf Server zu den Aufgaben und Scripten
 ## REMOTE PATH is deprecated due to mounting an SMB-share -> local mount MOUNTPATH is used instead
 ##
@@ -201,12 +203,11 @@ ping -c1 -W3 $HOST > /dev/null 2>&1
 		printf "${lgreen}Verbunden.${nc} \n \n \n"
 	fi
 
-## Check if Samba Share is already mounted by checking if a folder in MOUNTPATH exists.
+## Check if Samba Share is already mounted by checking if Weissbach - folder in MOUNTPATH exists.
+MOUNTPATHCHECK=$MOUNTPATH/Weissbach/
+if [[ -d "$MOUNTPATHCHECK" ]]; then
 
-if [[ -d "$MOUNTPATH" ]]; then
-
-	WASMOUNTEDBEFORE=true
-	printf "\n${lpurple}Samba-share ist schon verbunden. ${nc} \n \n" 
+	printf "\n${lpurple}SMB-share ist schon verbunden. ${nc} \n \n" 
 
 else
 
@@ -218,20 +219,20 @@ else
 			printf "."
 		done
 
-	printf "\n\n${lpurple}Mounte Samba-share...${nc} \n \n" 
+	printf "\n\n${lpurple}Mounte SMB-share...${nc} \n \n" 
 
-## Mounting Samba share
-	WASMOUNTEDBEFORE=false
+	## Mounting Samba share and save the state, that we mount now.
+	WASMOUNTEDBEFORE='NO'
 	mkdir $MOUNTPATH
 
-## Due to Problems with wrong login-data later in the script, we repeat to mount until login is successful
-## Therefore we catch the output of the mount-command
+	## Due to Problems with wrong login-data later in the script, we repeat to mount until login is successful
+	## Therefore we catch the output of the mount-command
 
 	SMBFSOUTPUT=''
 	while [[ "$SMBFSOUTPUT" != "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe on ${MOUNTPATH} (smbfs, nodev, nosuid, mounted by ${USER})" ]]; do
 
 		SMBFSOUTPUT=`mount -t smbfs -v "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe" $MOUNTPATH`
-
+;
 	done
 
 fi
@@ -257,19 +258,37 @@ done
 printf "\n${lblue}********************************  Sync beendet. ******************************** ${nc} \n"
 
 
- 
-if [[ "$DISCONNECT" = 1 ]] ; then
+# If the smb-share was not connected before, we expect, that it should be unmounted now.
+if [[ "$WASMOUNTEDBEFORE" = 'NO' ]]; then
+	
+	printf "${lpurple}Hänge SMB-share aus.${nc} \n"
+
+	# Check, wich System we are running to call proper umount command
+	if [[ "$UNAMESTR" = 'Darwin' ]]; then
+
+		diskutil umount force $MOUNTPATH
+
+	elif [[ "$UNAMESTR" = 'Linux' ]]; then
+
+		umount force $MOUNTPATH
+
+	fi
+
+fi
+
+# If user chose to Disonnect on start, we'll unmount and disconnect now... 
+if [[ "$DISCONNECT" = '1' ]] ; then
 
 	echo " "
 	printf "${lpurple}Hänge SMB-share aus und beende VPN-Verbindung.${nc} \n"
 
-# Check, wich System we are running to call proper umount command via uname
+	# Check, wich System we are running to call proper unmount command
 
 	if [[ "$UNAMESTR" = 'Darwin' ]]; then
 
 		diskutil umount force $MOUNTPATH
 
-	elif [[ "$UNAMESTR" == 'Linux' ]]; then
+	elif [[ "$UNAMESTR" = 'Linux' ]]; then
 
 		umount force $MOUNTPATH
 
