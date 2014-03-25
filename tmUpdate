@@ -40,7 +40,7 @@
 #
 # Username eingeben (Der Selbe, den man zur Anmeldung im Hochschulnetz benötigt)
 #
-TMUSER='bgericke'
+TMUSER='DEINANMELDENAME'
 
 #
 # Studiengang
@@ -56,7 +56,7 @@ SEMESTER='Sommersemester 14'
 # Hier den absoluten lokalen Pfad zu den Telematik-Dateien eintragen
 # z.B.: /Users/[UserName]/Documents/Telematik
 #
-LOCALPATH='/Users/deg0nz/Telematik/'
+LOCALPATH='/PFAD/ZU/DEINEM/TELEMATIKORDNER'
 
 #
 # Lokaler Ordner zum Mounten des Samba-Shares
