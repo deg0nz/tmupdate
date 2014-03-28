@@ -32,13 +32,13 @@ Das Script ist (hoffentlich) weitestgehend so kommentiert, dass man die Verände
 danach ggf. noch ein
 
 	chmod +x tmUpdate
-um die Datei ausfürhbar zu machen und dann kann das Script kann mit `./tmUpdate` gestartet werden.
+um die Datei ausführbar zu machen und dann kann das Script kann mit `./tmUpdate` gestartet werden.
 
 Es ist empfehlenswert, einen Symlink zur Datei nach /user/local/bin zu legen, damit man das Script von überall ausführen kann.
 Das geht so:
 
 	ln -s /PFAD/ZU/DEINEM/tmUpdate /usr/local/bin/tmUpdate
-Dann kannst du alle neueren Versionen mit dem in `/PFAD/ZU/DEINEM/tmUpdate` ersetzen und stets den selben Befehl zum aufrufen benutzen.
+Dann kannst du alle neueren Versionen mit dem File in `/PFAD/ZU/DEINEM/tmUpdate` ersetzen und stets den selben Befehl zum aufrufen benutzen.
 
 ## License
 
