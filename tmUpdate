@@ -22,13 +22,8 @@
 ##	ADN: @deg0nz
 ##  GitHub: https://github.com/deg0nz
 ##
-## version 0.8.1b // Configurable second version, Stand: Sommersemester 14 
+## version 0.8.3b // Configurable second version, Stand: Sommersemester 14 
 #####################################################################
-
-
-## 2 DO :
-## -Moodle Handle für AUD... (idee: via wget & cookie-catching)
-##
 
 
 #####################################################################
@@ -40,7 +35,7 @@
 #
 # Username eingeben (Der Selbe, den man zur Anmeldung im Hochschulnetz benötigt)
 #
-TMUSER='DEINANMELDENAME'
+TMUSER='<USER>'
 
 #
 # Studiengang
@@ -56,12 +51,22 @@ SEMESTER='Sommersemester 14'
 # Hier den absoluten lokalen Pfad zu den Telematik-Dateien eintragen
 # z.B.: /Users/[UserName]/Documents/Telematik
 #
-LOCALPATH='/Users/DEINUSER/Telematik'
+LOCALPATH='/Users/<USER>/Telematik'
 
 #
 # Lokaler Ordner zum Mounten des Samba-Shares (Du solltest Schreibrechte in dem Ordner haben!)
 #
-MOUNTPATH='/Volumes/Aufgabe'
+MOUNTPATH='/home/<USER>/Aufgabe'
+
+
+#
+# Hier Ja oder Nein eintragen, falls dein Home-Ordner auch synchronisiert werden soll.
+# Der Syncing-Ordner bei dir Lokal muss ebenfalls angepasst werden
+#
+# ACHTUNG: Der Sync für den Home-Ordner Braucht nochmals eine Passworteingabe, oder Public-Key-Authentification.
+#
+SYNCHOME='Ja'
+LOCALHOME='/Users/<USER>/Telematik/Home-Ordner'
 
 #
 # Deine Dozenten auf dem Telematikserver mit
@@ -102,9 +107,9 @@ AUD_LOCAL='Algorithmen und Datenstrukturen'
 MATHE_LOCAL='Mathematik II'
 #5 ET Laborübungen
 ET_TM_LABOR_LOCAL='Eletrotechnik für Telematiker Laborübungen'
-#6 
+#6 Kommunikationstechnik
 KOMMTECH_LOCAL='Kommunikationstechnik'
-#7
+#7 Praktikum
 PRAKTIKUM_LOCAL='PSA - Praktikum'
 
 #
@@ -144,6 +149,7 @@ REMOTEDIRS[7]=$PRAKTIKUM/$STUDIENGANG/PSA/
 
 # Adresse zum Server - Das muss normalerweise nicht verändert werden
 HOST='tmserv2.inw.ad.th-wildau.de'
+HOMEHOST='home.tfh-wildau.de'
 
 # Check and save OS in variable
 UNAMESTR=`uname`
@@ -157,12 +163,6 @@ UNAMESTR=`uname`
 #
 ANYCONNECT_LOCAL='/opt/cisco/anyconnect/bin/vpn'
 
-## Pfad auf Server zu den Aufgaben und Scripten
-## REMOTE PATH is deprecated due to mounting an SMB-share -> local mount MOUNTPATH is used instead
-##
-
-# REMOTEPATH='../post/aufgabe'
-
 ## Farbspezifikationen für die Übersicht der Outputs
 lred='\e[1;31m'	# light red 
 lgreen='\e[1;32m' # light green
@@ -170,29 +170,48 @@ lblue='\e[1;34m' # light blue
 lpurple='\e[1;35m' # light purple
 nc='\e[0m' # No Color
 
-## Als erstes Check, ob wir mit dem Uninetz verbunden sind.
-## Pinge $HOST - falls nicht erreichbar, rufe AnyConnect auf.
+
+#
+#
+#		Check connection to the TH-Wildau-VPN and receive user's decision what to do after the Sync
+#
+#
 
 echo " "
 echo " "
 echo "Check, ob du mit dem Hochschulnetz verbunden bist..."
 
-## Pinging HOST
+## Pinging $HOST to verify connection..
 ping -c1 -W3 $HOST > /dev/null 2>&1
 	if [[ $? -eq 0 ]] ; then
 
 		printf "${lgreen}Verbunden.${nc} \n \n"
 
+		## If connected, ask the user if he wants to unmount share after sync
+		echo "Möchtest du das Share nach dem Sync wieder aushängen?"
+
+		select yn in "Ja" "Nein"; do
+    		case $yn in
+        		"Ja" ) DOATEND='3'; break;;
+				"Nein" ) DOATEND='0'; break;;
+				* ) echo "Bitte 1 oder 2 eingeben!";
+    		esac
+		done
+
 	else
 		
 		printf "${lred}Nicht verbunden.${nc} \n"
-		echo "Möchtest du nach dem Sync wieder disconnecten?"
+
+		## If not connected, ask the user if he wants to umount and disconnect, only umount or stay connected and mounted
+		## save the state and use in switch case at the end of the script
+		echo "Was möchtest du nach dem Sync machen?"
 	
-		select yn in "Ja" "Nein"; do
+		select yn in "Disconnect und Unmount" "Verbunden bleiben und share eingehängt lassen" "Nur Unmount und verbunden bleiben"; do
     		case $yn in
-        		Ja ) DISCONNECT='1'; break;;
-        		Nein ) DISCONNECT='0'; break;;
-				* ) echo "Bitte 1 oder 2 eingeben!";
+        		"Disconnect und Unmount" ) DOATEND='1'; break;;
+				"Verbunden bleiben und share eingehängt lassen" ) DOATEND='0'; break;;
+				"Nur Unmount und verbunden bleiben" ) DOATEND='3'; break;;
+				* ) echo "Bitte 1, 2, oder 3 eingeben!";
     		esac
 		done
 
@@ -202,6 +221,12 @@ ping -c1 -W3 $HOST > /dev/null 2>&1
 
 		printf "${lgreen}Verbunden.${nc} \n \n \n"
 	fi
+
+#
+#
+#		Samba-Share Connection
+#
+#
 
 ## Check if Samba Share is already mounted by checking if Weissbach - folder in MOUNTPATH exists.
 MOUNTPATHCHECK=$MOUNTPATH/Weissbach/
@@ -221,9 +246,8 @@ else
 
 	printf "\n\n${lpurple}Mounte SMB-share...${nc} \n \n" 
 
-	## Mounting Samba share and save the state, that we mount now.
-	WASMOUNTEDBEFORE='NO'
-	mkdir $MOUNTPATH
+	## Mounting Samba share.
+	mkdir $MOUNTPATH > /dev/null 2>&1
 
 	## Due to Problems with wrong login-data later in the script, we repeat to mount until login is successful
 	## Therefore we catch the output of the mount-command
@@ -232,10 +256,17 @@ else
 	while [[ "$SMBFSOUTPUT" != "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe on ${MOUNTPATH} (smbfs, nodev, nosuid, mounted by ${USER})" ]]; do
 
 		SMBFSOUTPUT=`mount -t smbfs -v "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe" $MOUNTPATH`
-		
+
 	done
 
 fi
+
+
+#							
+#
+#		Perform Sync
+#
+#							
 
 # echo begin sync
 printf "${lblue}********************************  Starte sync...  ********************************${nc} \n"
@@ -254,50 +285,75 @@ do
 	
 done
 
+# If selected, sync Home-Folder
+if [[ "$SYNCHOME" = 'Ja' ]]; then
+	
+# rsync -ave ssh $USER@$HOST:$REMOTEPATH/"${REMOTEDIRS[$i]}"/ $LOCALPATH/"$SEMESTER"/"${LOCALDIRS[$i]}" -h --human-readable
+
+	echo "--------------------------------------------------------------------------------------------------------------------"
+	printf "  ${lblue}Syncing ${lgreen}Home-Folder@${HOMEHOST}${nc} ${lblue}to local folder${nc} ${lgreen}${LOCALHOME}${nc} ${nc} \n"
+	echo "--------------------------------------------------------------------------------------------------------------------"
+	echo "New Files:"
+
+	rsync -ave ssh $TMUSER@$HOMEHOST:~/ $LOCALHOME -h --human-readable -F --exclude='.*'
+
+fi
+
 #echo end of sync
 printf "\n${lblue}********************************  Sync beendet. ******************************** ${nc} \n"
 
+#
+#
+#		What to do after the Sync
+#
+#
 
-# If the smb-share was not connected before, we expect, that it should be unmounted now.
-if [[ "$WASMOUNTEDBEFORE" = 'NO' ]]; then
-	
-	printf "${lpurple}Hänge SMB-share aus.${nc} \n"
+# Functions for Disconnecting and Unmount Procedure
+function disconnect_now(){
 
-	# Check, wich System we are running to call proper umount command
-	if [[ "$UNAMESTR" = 'Darwin' ]]; then
-
-		diskutil umount force $MOUNTPATH
-
-	elif [[ "$UNAMESTR" = 'Linux' ]]; then
-
-		umount force $MOUNTPATH
-
-	fi
-
-fi
-
-# If user chose to Disonnect on start, we'll unmount and disconnect now... 
-if [[ "$DISCONNECT" = '1' ]] ; then
-
-	echo " "
-	printf "${lpurple}Hänge SMB-share aus und beende VPN-Verbindung.${nc} \n"
-
-	# Check, wich System we are running to call proper unmount command
-
-	if [[ "$UNAMESTR" = 'Darwin' ]]; then
-
-		diskutil umount force $MOUNTPATH
-
-	elif [[ "$UNAMESTR" = 'Linux' ]]; then
-
-		umount force $MOUNTPATH
-
-	fi
-	
-	echo " "
+  	echo " "
 
 	$ANYCONNECT_LOCAL disconnect > /dev/null 2>&1
 	printf "${lred}Verbindung zum VPN beendet.${nc} \n"
-fi
+
+}
+
+function umount_now(){
+
+	echo " "
+	printf "${lpurple}Hänge SMB-share aus...${nc} \n"
+
+	# Check, wich System we are running to call proper umount command
+
+	if [[ "$UNAMESTR" = 'Darwin' ]]; then
+
+		diskutil umount force $MOUNTPATH
+
+	elif [[ "$UNAMESTR" = 'Linux' ]]; then
+
+		umount force $MOUNTPATH
+
+	fi
+
+}
+
+# Case for performing umount and disconnect actions
+case $DOATEND in
+
+	0 )
+		printf "${lgreen}Bleibe verbunden und SMB-share bleibt eingehängt.${nc} \n";;
+
+	1 )
+		umount_now
+		disconnect_now;;
+
+	2 )
+		disconnect_now;;
+
+	3 )
+		umount_now;;
+
+esac
+
 
 exit 0
