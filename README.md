@@ -2,87 +2,44 @@
 
 # tmUpdate
 
-# THIS README IS DEPRECATED! I'LL CHANGE IT AS SOON AS POSSIBLE!
-## Please Visit http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/ for up-to-date information!!
+## Bitte geh auf http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/ für detaillierte und aktuelle Informationen!!
+
+Das Script ist (hoffentlich) weitestgehend so kommentiert, dass man die Veränderungen selbst vornehmen kann, ich werde hier dennoch alles einmal erklären:
+
+* **TMUSER** - Hier wird dein Anmeldename eingegeben (Der von deinem Hochschulaccount)
 
 
-<del>
-### Script zum Abgleich lokaler Daten mit Telematikserver der TH Wildau
+* **STUDIENGANG** - Hier wird das Kürzel deines Studiengangs eingetragen (= der Ordnername in den jeweiligen Dozenten-Ordnern)
 
 
-Ich habe mir im Dezember 2013 ein kleines Bashscript geschrieben, das die Daten vom Telematikserver der TH Wildau mit einem lokalen Ordner synchronisiert.
-Dies soll der Versuch einer Dokumentation dieses Scripts sein.
-Das Script benutzt Rsync zur Synchronisation. Es werden 2 Arrays erstellt um die Dozentenordner Online zu durchlaufen und die Daten dann jeweils mit einem lokalen Ordner abzugleichen.
-
-### Authentifizierung am Telematikserver:
-
-Damit man nich jedes mal sein Passwort beim Durchlauf der Arrays eingeben muss, muss als erstes ein SSH-Key erzeugt werden, falls noch keiner vorhanden ist. Dieser muss dann auf den TM-Server kopiert werden.
-Dazu muss der Befehl ssh-keygen benutzt werden: 
-
-	$ ssh-keygen -t rsa -b 2048
-	Generating public/private rsa key pair.
-	Enter file in which to save the key (/home/username/.ssh/id_rsa): 
-	Enter passphrase (empty for no passphrase): 
-	Enter same passphrase again: 
-	Your identification has been saved in /home/username/.ssh/id_rsa.
-	Your public key has been saved in /home/username/.ssh/id_rsa.pub.
-
-Danach muss der erzeugte Key auf den Telematikserver kopiert werden:
-
-	$ ssh-copy-id DEINANMELDENAME@www.tm.th-wildau.de
-	DEINANMELDENAME@www.tm.th-wildau.de's password: 
-
-**ssh-copy-id kann auf dem Mac per [Homebrew](http://brew.sh) installieren**
-
-Danach kann ggf. noch gecheckt werden, ob der Key auf auf dem Server liegt. Der müsste dann in ~/.ssh/authorized_keys liegen.
-
-Von diesem Moment an müsstest du dich ohne Passwort am Server anmelden können:
-	
-	$ ssh DEINANMELDENAME@www.tm.th-wildau.de
-	[...Server blabla...]
-	DEINANMELDENAME@tms2:~$ exit
-	Abgemeldet
-	Connection to www.tm.th-wildau.de closed.
+* **SEMESTER** - Der Ordner, der bei dir lokal das jeweilige Semester angibt
 
 
-Man kann das Ganze auch hier noch einmal nachlesen (en):[Serverfault.com - how to automate ssh login with password](http://serverfault.com/questions/241588/how-to-automate-ssh-login-with-password)
+* **LOCALPATH** -  Der absolute Pfad der zu deinem Telematikordner führt (unter OSX z.B.: /Users/[UserName]/Documents/Telematik ; unter Linux z.B.: /home/[UserName]/Telematik)
 
-###Verändern des Scripts:
+* **MOUNTPATH** - Der absolute Pfad zu dem Ordner, in dem das SMB-Share gemountet (eingehangen) werden soll. Dein normaler User sollte Schreibrechte in diesem Verzeichnus haben! (unter OSX z.B.: /Volumes/Aufgabe ; unter Linux z.B.: /home/[UserName]/Aufgabe)
 
-Wenn das alles funktioniert können wir uns ans Verändern des Scripts machen.
-Du kannst es ganz normal mit jedem Texteditor öffnen.
-Das Script ist weitestgehend so kommentiert, dass man die Veränderungen selbst vornehmen kann, ich werde hier dennoch alles einmal erklären:
+* **SYNCHOME** - Angabe, ob das Script auch deinen Home-Ordner Synchronisieren soll. Hier ist unter Umständen eine weitere Passworteingabe nötig. Wie du dir die Passworteinngabe sparen kannst, kannst du [hier](http://serverfault.com/questions/241588/how-to-automate-ssh-login-with-password) oder [hier](http://kayuk.de/blog/2014/01/script-zum-abgleich-lokaler-daten-mit-telematikserver-der-th-wildau/) nachlesen. (Bei dem Server, auf den der Key geschoben werden muss, handelt es sich um "home.tfh-wildau.de")
 
-USER - Hier wird dein Anmeldename eingegeben (der Selbe, den du zuvor zum ssh login benutzt hast) 
- 
-STUDIENGANG - Hier wird das Kürzel deines Studiengangs eingetragen (= der Ordnername in den jeweiligen Dozenten-Ordnern)
+* **LOCALHOME** - Pfadangabe, mit welchem Ordner auf deiner Festplatte der Home-Ordner vom Telematikserver synchronisiert werden soll (nicht nötig, falls du bei SYCHOME='Nein' angegeben hast)
 
-SEMESTER - Der Ordner, der bei dir lokal das jeweilige Semester angibt 
- 
-LOCALPATH -  Der absolute Pfad der zu deinem Telematikordner führt (unter OSX z.B.: /Users/[UserName]/Documents/Telematik ; unter Linux z.B.: /home/[UserName]/Telematik) 
- 
-Danach werden der Reihe nach die Namen der Dozenten eingegeben - genau so, wie sie auch auf dem TM-Server heißen. 
- 
-Als nächstes müssen die Ordnernamen für die jeweiligen Fächer in <i>genau der Reihenfolge </i>wie die Dozenten eingeben werden - Sprich: "Da wo der Dozent #0 steht, muss nachfolgend auch das Fach dieses Dozenten bei #0 stehen!" 
- 
-Für andere Semester und andere Dozenten müssen dann ggf. die Variablen verändert werden. Wichtig dabei ist nur, dass die vorgegebene Syntax eingehalten wird. Bei Veränderungen müssen dann natürlich auch die Einträge in den Arrays LOCALDIRS und REMOTEDIRS analog verändert werden. Auch hier gilt wieder: Reihenfolge beachten!! 
- 
-Ich werde dann auch immer versuchen, für neue Semester auch Updates hier ins Blog hochzuladen.
- 
- 
-Als letztes muss das Script noch ausführbar gemacht werden:
-  
-	$ chmod +x tmUpdate
-  
- 
-**Wenn es ausführbar ist, kannst du das Script nach /usr/local/bin kopieren um den Befehl direkt ins Terminal eingeben zu können.**
- 
-###Installation:
-	git clone https://github.com/deg0nz/tmupdate.git   
 
-Anleitung mit code ist hier: [tmUpdate auf Kayuk.de](http://kayuk.de/blog/2014/01/script-zum-abgleich-lokaler-daten-mit-telematikserver-der-th-wildau/)
+* Danach werden der Reihe nach die Namen der Dozenten eingegeben - Exakt so, wie sie auch auf dem TM-Server heißen (*Achtung: Case Sensitive*). Die Anzahl variiert natürlich je nach Semester..
 
-</del>
+
+* Als nächstes müssen **deine lokalen Ordnernamen** bei den Variablen mit der Endung **_LOCAL** eingegeben werden. Die Fächer müssen in *genau der Reihenfolge* wie die Dozenten eingeben werden!! - Sprich: "Da wo der Dozent #0 steht, muss hier auch das Fach dieses Dozenten bei #0 stehen!"
+
+danach ggf. noch ein
+
+	chmod +x tmUpdate
+um die Datei ausfürhbar zu machen und dann kann das Script kann mit `./tmUpdate` gestartet werden.
+
+Es ist empfehlenswert, einen Symlink zur Datei nach /user/local/bin zu legen, damit man das Script von überall ausführen kann.
+Das geht so:
+
+	ln -s /PFAD/ZU/DEINEM/tmUpdate /usr/local/bin/tmUpdate
+Dann kannst du alle neueren Versionen mit dem in `/PFAD/ZU/DEINEM/tmUpdate` ersetzen und stets den selben Befehl zum aufrufen benutzen.
+
 ## License
 
 (The MIT License)
