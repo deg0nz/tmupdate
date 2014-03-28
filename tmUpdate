@@ -35,7 +35,7 @@
 #
 # Username eingeben (Der Selbe, den man zur Anmeldung im Hochschulnetz benötigt)
 #
-TMUSER='<USER>'
+TMUSER='<TELEMATIKUSER>'
 
 #
 # Studiengang
@@ -49,9 +49,10 @@ SEMESTER='Sommersemester 14'
 
 #
 # Hier den absoluten lokalen Pfad zu den Telematik-Dateien eintragen
-# z.B.: /Users/[UserName]/Documents/Telematik
+# z.B.: /home/[UserName]/Telematik  <-- Linux
+#		/Users/[USERNAME]/Documents/Telematik <-- OSX
 #
-LOCALPATH='/Users/<USER>/Telematik'
+LOCALPATH='/PATH/TO/YOUR/TELEMATIK/FOLDER'
 
 #
 # Lokaler Ordner zum Mounten des Samba-Shares (Du solltest Schreibrechte in dem Ordner haben!)
@@ -232,7 +233,7 @@ ping -c1 -W3 $HOST > /dev/null 2>&1
 MOUNTPATHCHECK=$MOUNTPATH/Weissbach/
 if [[ -d "$MOUNTPATHCHECK" ]]; then
 
-	printf "\n${lpurple}SMB-share ist schon verbunden. ${nc} \n \n" 
+	printf "\n${lpurple}SMB-share ist verbunden. ${nc} \n \n" 
 
 else
 
@@ -249,21 +250,45 @@ else
 	## Mounting Samba share.
 	mkdir $MOUNTPATH > /dev/null 2>&1
 
-	
-	
 	## Due to Problems with wrong login-data later in the script, we repeat to mount until login is successful
+	## If the Login Count reaches the Number in $SMBLOGINCNT, we will exit
 	
+
 	## Check which OS we're running to call proper mount command
+	
+
 	if [[ "$UNAMESTR" = 'Linux' ]]; then
 		 
-			until sudo mount -t cifs //tmserv2.inw.ad.th-wildau.de/Aufgabe $MOUNTPATH -o username=$TMUSER,domain=ad; do :; done
+		SMBLOGINCNT='5'
+			until sudo mount -t cifs //tmserv2.inw.ad.th-wildau.de/Aufgabe $MOUNTPATH -o username=$TMUSER,domain=ad; do
+
+				SMBLOGINCNT=$((SMBLOGINCNT-1))
+				if [[ "${SMBLOGINCNT}" = "0" ]]; then
+
+					echo "Du hast dein Passwort 5x falsch eingegeben :( Exit."
+					exit $?
+					break
+				fi
+
+			done
 
 	elif [[ "$UNAMESTR" = 'Darwin' ]]; then
 
-			until mount -t smbfs -v "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe" $MOUNTPATH; do :; done
+		SMBLOGINCNT='5'
+			until mount -t smbfs "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe" $MOUNTPATH; 
+			do
+
+				SMBLOGINCNT=$((SMBLOGINCNT-1))
+				if [[ "${SMBLOGINCNT}" = "0" ]]; then
+
+					echo "Du hast dein Passwort 5x falsch eingegeben :( Exit."
+					exit $?
+					break
+				fi
+
+			done
 
 	fi
-
 
 fi
 
@@ -337,7 +362,7 @@ function umount_now(){
 
 	elif [[ "$UNAMESTR" = 'Linux' ]]; then
 
-		umount force $MOUNTPATH
+		sudo umount $MOUNTPATH
 
 	fi
 
