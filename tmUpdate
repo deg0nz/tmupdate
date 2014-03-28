@@ -249,15 +249,31 @@ else
 	## Mounting Samba share.
 	mkdir $MOUNTPATH > /dev/null 2>&1
 
+	
+	## Check which OS we're running to call proper mount command
 	## Due to Problems with wrong login-data later in the script, we repeat to mount until login is successful
 	## Therefore we catch the output of the mount-command
+	
+	if [[ "$UNAMESTR" = 'Linux' ]]; then
+		
+		SMBFSOUTPUT=''
+		while [[ "$SMBFSOUTPUT" != "mount.cifs kernel mount options: ip=194.95.45.58,unc=\\tmserv2.inw.ad.th-wildau.de\Aufgabe,user=${TMUSER},,domain=ad,pass=********" ]]; do
 
-	SMBFSOUTPUT=''
-	while [[ "$SMBFSOUTPUT" != "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe on ${MOUNTPATH} (smbfs, nodev, nosuid, mounted by ${USER})" ]]; do
+		SMBFSOUTPUT=`sudo mount -t cifs -v "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe" $MOUNTPATH`
+
+		done
+
+	elif [[ "$UNAMESTR" = 'Darwin' ]]; then
+
+		SMBFSOUTPUT=''
+		while [[ "$SMBFSOUTPUT" != "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe on ${MOUNTPATH} (smbfs, nodev, nosuid, mounted by ${USER})" ]]; do
 
 		SMBFSOUTPUT=`mount -t smbfs -v "//ad;${TMUSER}@tmserv2.inw.ad.th-wildau.de/Aufgabe" $MOUNTPATH`
 
-	done
+		done
+
+	fi
+
 
 fi
 
