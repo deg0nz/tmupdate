@@ -2,7 +2,7 @@
 
 # tmUpdate
 
-## Bitte geh auf http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/ für detaillierte und aktuelle Informationen!!
+#### Bitte geh auf http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/ für detaillierte und aktuelle Informationen!!
 
 Das Script ist (hoffentlich) weitestgehend so kommentiert, dass man die Veränderungen selbst vornehmen kann, ich werde hier dennoch alles einmal erklären:
 
