@@ -171,6 +171,18 @@ lblue='\e[1;34m' # light blue
 lpurple='\e[1;35m' # light purple
 nc='\e[0m' # No Color
 
+#
+#
+# 		Some checks, to verify if the User has changed the needed Variables
+#
+#
+
+if [ "${TMUSER}" = '<TELEMATIKUSER>' ] || [ "${LOCALPATH}" = '/PATH/TO/YOUR/TELEMATIK/FOLDER' ] || [ "${MOUNTPATH}" = '/home/<USER>/Aufgabe' ]; then
+	
+	printf "${lred} \n Du musst zuerst die Variablen anpassen!! \n EXIT. \n \n${nc}"
+
+	exit 1
+fi
 
 #
 #
