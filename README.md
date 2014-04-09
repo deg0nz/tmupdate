@@ -2,7 +2,9 @@
 
 # tmUpdate
 
-#### Bitte geh auf http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/ für detaillierte und aktuelle Informationen!!
+#### Bitte geh auf [http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/](http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/) für detaillierte und aktuelle Informationen!!
+
+### Nach dem Download müssen als erstes die Variablen im oberen Teil des Scripts angepasst werden!
 
 Das Script ist (hoffentlich) weitestgehend so kommentiert, dass man die Veränderungen selbst vornehmen kann, ich werde hier dennoch alles einmal erklären:
 
@@ -21,7 +23,7 @@ Das Script ist (hoffentlich) weitestgehend so kommentiert, dass man die Verände
 
 * **SYNCHOME** - Angabe, ob das Script auch deinen Home-Ordner Synchronisieren soll. Hier ist unter Umständen eine weitere Passworteingabe nötig. Wie du dir die Passworteinngabe sparen kannst, kannst du [hier](http://serverfault.com/questions/241588/how-to-automate-ssh-login-with-password) oder [hier](http://kayuk.de/blog/2014/01/script-zum-abgleich-lokaler-daten-mit-telematikserver-der-th-wildau/) nachlesen. (Bei dem Server, auf den der Key geschoben werden muss, handelt es sich um "home.tfh-wildau.de")
 
-* **LOCALHOME** - Pfadangabe, mit welchem Ordner auf deiner Festplatte der Home-Ordner vom Telematikserver synchronisiert werden soll (nicht nötig, falls du bei SYCHOME='Nein' angegeben hast)
+* **LOCALHOME** - Pfadangabe, mit welchem Ordner auf deiner Festplatte der Home-Ordner vom Telematikserver synchronisiert werden soll (nicht nötig, falls du bei SYNCHOME='Nein' angegeben hast)
 
 
 * Danach werden der Reihe nach die Namen der Dozenten eingegeben - Exakt so, wie sie auch auf dem TM-Server heißen (*Achtung: Case Sensitive*). Die Anzahl variiert natürlich je nach Semester..
