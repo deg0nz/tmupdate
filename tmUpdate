@@ -137,7 +137,7 @@ REMOTEDIRS[3]=$AUD/$STUDIENGANG/
 #Freizeichen für Mathe umgehen:
 MAZWEI='Ma II'
 REMOTEDIRS[4]=$MATHE/$STUDIENGANG/$MAZWEI/
-REMOTEDIRS[5]=$ET_TM_LABOR/$STUDIENGANG/
+REMOTEDIRS[5]=$ET_TM_LABOR/$STUDIENGANG/ELT_SoSe14/
 REMOTEDIRS[6]=$KOMMTECH/$STUDIENGANG/Kommunikationstechnik/
 REMOTEDIRS[7]=$PRAKTIKUM/$STUDIENGANG/PSA/
 
@@ -179,7 +179,9 @@ nc='\e[0m' # No Color
 
 if [ "${TMUSER}" = '<TELEMATIKUSER>' ] || [ "${LOCALPATH}" = '/PATH/TO/YOUR/TELEMATIK/FOLDER' ] || [ "${MOUNTPATH}" = '/home/<USER>/Aufgabe' ]; then
 	
-	printf "${lred} \n Du musst zuerst die Variablen anpassen!! \n EXIT. \n \n${nc}"
+	printf "${lred} \n Du musst zuerst die Variablen anpassen!! \n EXIT. \n ${nc}"
+	printf "${lpurple} \n Öffne tmUpdate in einem Texteditor und ändere die Variablen. Nähere Infos gibts hier:${nc}"
+	printf "${lgreen} \n http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/ \n \n${nc}"
 
 	exit 1
 fi
