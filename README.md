@@ -4,8 +4,6 @@
 
 #### Bitte geh auf [http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/](http://kayuk.de/blog/2014/03/tmupdate-aktualisierung-sose-2014/) für detaillierte und aktuelle Informationen!!
 
-### Nach dem Download müssen als erstes die Variablen im oberen Teil des Scripts angepasst werden!
-
 Das Script ist (hoffentlich) weitestgehend so kommentiert, dass man die Veränderungen selbst vornehmen kann, ich werde hier dennoch alles einmal erklären:
 
 * **TMUSER** - Hier wird dein Anmeldename eingegeben (Der von deinem Hochschulaccount)
