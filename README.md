@@ -1,4 +1,4 @@
-
+### Da die meisten Dozenten in der Telematik inzwischen auf Moodle umgestellt haben, ist dieses Script mehr oder weniger obsolet geworden... Ich lasse es aber einfach mal hier. Vielleicht kann jemand irgendwann etwas damit anfangen...
 
 # tmUpdate
 
